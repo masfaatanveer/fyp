@@ -57,6 +57,10 @@ TEMPLATES = [
 
 # ── Databases ───────────────────────────────────────────────────────────────
 
+_db_options = {}
+if os.getenv("DB_HOST", "localhost") != "localhost":
+    _db_options = {"sslmode": "require"}
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -65,6 +69,8 @@ DATABASES = {
         "PASSWORD": os.getenv("DB_PASSWORD", ""),
         "HOST": os.getenv("DB_HOST", "localhost"),
         "PORT": os.getenv("DB_PORT", "5432"),
+        "CONN_MAX_AGE": 0,  # required for Vercel serverless
+        "OPTIONS": _db_options,
     }
 }
 
