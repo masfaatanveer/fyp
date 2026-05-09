@@ -95,19 +95,102 @@ def vapi_webhook(request):
 def student_lookup(request, roll_no):
     """
     GET /api/agent/student/<roll_no>/
-    Returns basic student info for identity verification before chat starts.
+    Returns full student data: profile, courses, attendance, sessional marks, transcript.
+    Used by n8n workflows and Vapi assistant to fetch student context.
     """
-    from .models import StudentProfile
+    from .models import (
+        StudentProfile, CourseEnrollment, AttendanceRecord,
+        SessionalMarks, TranscriptCourse,
+    )
     try:
         student = StudentProfile.objects.get(roll_no=roll_no.strip().upper())
-        return JsonResponse({
-            "roll_no": student.roll_no,
-            "name": student.name,
-            "program": student.program,
-            "section": student.section,
-        })
     except StudentProfile.DoesNotExist:
         return JsonResponse({"error": "Student not found."}, status=404)
+
+    # ── Profile ───────────────────────────────────────────────────────────────
+    profile = {
+        "roll_no": student.roll_no,
+        "name": student.name,
+        "program": student.program,
+        "section": student.section,
+        "cgpa": float(student.cgpa) if student.cgpa else None,
+        "credit_hours_done": student.credit_hours_done,
+        "credit_hours_req": student.credit_hours_req,
+        "degree_status": student.degree_status,
+        "email": student.email,
+        "phone": student.phone,
+    }
+
+    # ── Current Courses ───────────────────────────────────────────────────────
+    enrollments = CourseEnrollment.objects.filter(student=student)
+    current_courses = [
+        {
+            "course_code": e.course_code,
+            "course_name": e.course_name,
+            "credit_hours": e.credit_hours,
+            "section": e.section,
+            "semester": e.semester,
+        }
+        for e in enrollments
+    ]
+
+    # ── Attendance (per course) ───────────────────────────────────────────────
+    course_codes = AttendanceRecord.objects.filter(student=student).values_list("course_code", flat=True).distinct()
+    attendance = []
+    for code in course_codes:
+        records = AttendanceRecord.objects.filter(student=student, course_code=code)
+        total = records.count()
+        present = records.filter(status="P").count()
+        absent = records.filter(status="A").count()
+        leave = records.filter(status="L").count()
+        percent = round(present / total * 100, 1) if total > 0 else 0
+        attendance.append({
+            "course_code": code,
+            "course_name": records.first().course_name,
+            "present": present,
+            "absent": absent,
+            "leave": leave,
+            "total": total,
+            "percentage": percent,
+            "status": "OK" if percent >= 75 else "SHORT",
+        })
+
+    # ── Sessional Marks ───────────────────────────────────────────────────────
+    sessional_marks = [
+        {
+            "course_code": m.course_code,
+            "course_name": m.course_name,
+            "assignment_marks": m.assignment_marks,
+            "quiz_marks": m.quiz_marks,
+            "mid_marks": m.mid_marks,
+            "total_obtained": m.total_obtained,
+            "total_possible": m.total_possible,
+            "percentage": round(m.total_obtained / m.total_possible * 100, 1) if m.total_possible else 0,
+        }
+        for m in SessionalMarks.objects.filter(student=student)
+    ]
+
+    # ── Transcript (grouped by semester) ─────────────────────────────────────
+    transcript_qs = TranscriptCourse.objects.filter(student=student).order_by("semester")
+    semesters: dict = {}
+    for tc in transcript_qs:
+        semesters.setdefault(tc.semester, []).append({
+            "course_code": tc.course_code,
+            "course_name": tc.course_name,
+            "grade": tc.grade,
+            "grade_point": float(tc.grade_point) if tc.grade_point else None,
+            "credit_hours": tc.credit_hours,
+            "gpa_earned": float(tc.gpa_earned) if tc.gpa_earned else None,
+        })
+    transcript = [{"semester": sem, "courses": courses} for sem, courses in semesters.items()]
+
+    return JsonResponse({
+        "profile": profile,
+        "current_courses": current_courses,
+        "attendance": attendance,
+        "sessional_marks": sessional_marks,
+        "transcript": transcript,
+    })
 
 
 def admin_logs(request):

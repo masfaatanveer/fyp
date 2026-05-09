@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import Vapi from "@vapi-ai/web";
 import ReactMarkdown from "react-markdown";
 import {
   MessageCircle,
@@ -129,6 +130,7 @@ export function ChatWidget({
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const vapiRef = useRef<Vapi | null>(null);
   const hasInteracted = messages.length > 1;
 
   useEffect(() => {
@@ -143,24 +145,10 @@ export function ChatWidget({
     }, 120);
   }, [open, student]);
 
-  // Initialize Vapi SDK instance once public key is available
+  // Initialize Vapi instance once public key is available
   useEffect(() => {
-    if (!vapiPublicKey) return;
-    // @ts-ignore
-    if (window.__vapi) return;
-    const init = () => {
-      // @ts-ignore
-      if (window.Vapi) {
-        // @ts-ignore
-        window.__vapi = new window.Vapi(vapiPublicKey);
-      }
-    };
-    // @ts-ignore
-    if (window.Vapi) init();
-    else {
-      const script = document.querySelector('script[src*="vapi.ai"]');
-      if (script) script.addEventListener("load", init);
-    }
+    if (!vapiPublicKey || vapiRef.current) return;
+    vapiRef.current = new Vapi(vapiPublicKey);
   }, [vapiPublicKey]);
 
   const sendMessage = useCallback(
@@ -230,34 +218,23 @@ export function ChatWidget({
   }
 
   async function toggleCall() {
-    if (!vapiPublicKey || !vapiAssistantId) {
+    if (!vapiAssistantId || !vapiRef.current) {
       setMessages((prev) => [
         ...prev,
         {
           id: makeId(),
           role: "assistant",
-          content:
-            "Voice call ke liye Vapi configure nahi hai. `.env` mein `VITE_VAPI_PUBLIC_KEY` aur `VITE_VAPI_ASSISTANT_ID` set karein.",
+          content: "Voice call ke liye Vapi configure nahi hai. `.env` mein `VITE_VAPI_PUBLIC_KEY` aur `VITE_VAPI_ASSISTANT_ID` set karein.",
           ts: new Date(),
         },
       ]);
       return;
     }
     if (callActive) {
-      // @ts-ignore
-      window.__vapi?.stop();
+      vapiRef.current.stop();
       setCallActive(false);
     } else {
-      // @ts-ignore
-      const vapi = window.__vapi;
-      if (!vapi) {
-        setMessages((prev) => [
-          ...prev,
-          { id: makeId(), role: "assistant", content: "Vapi SDK load nahi hua. Page reload karein.", ts: new Date() },
-        ]);
-        return;
-      }
-      vapi.start(vapiAssistantId, { metadata: { roll_no: rollNo } });
+      vapiRef.current.start(vapiAssistantId, { metadata: { roll_no: rollNo } } as any);
       setCallActive(true);
     }
   }

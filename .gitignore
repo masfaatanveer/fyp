@@ -1,26 +1,73 @@
-# Secrets
+# ── Secrets & Environment ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
 backend/.env
+frontend/.env
+*.pem
+*.key
 
-# Python
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
-*.sqlite3
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
 
-# Virtual environments
-backend/venv/
-.venv/
+# ── Virtual Environments ──────────────────────────────────────────────────────
 venv/
+.venv/
+env/
+backend/venv/
+backend/.venv/
 
-# Django / local artifacts
+# ── Django ────────────────────────────────────────────────────────────────────
+*.sqlite3
 staticfiles/
 media/
 
-# OS / editor
+# ── Testing & Coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.mypy_cache/
+.ruff_cache/
+
+# ── Celery ────────────────────────────────────────────────────────────────────
+celerybeat-schedule
+celerybeat.pid
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ── TypeScript build artifacts ────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── OS & Editor ───────────────────────────────────────────────────────────────
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
+*.swp
+*.swo
 
-# Codex / docs
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
 .codex/
 codex/
-*.md

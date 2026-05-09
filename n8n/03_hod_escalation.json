@@ -1,0 +1,82 @@
+{
+  "name": "KFUEIT - 03 HOD Escalation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "escalate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f9a0b1c2-d3e4-5678-fabc-d09123456789",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "d5f1a0b3-3c4d-5e6f-7a8b-9c0d1e2f3a4b"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'http://127.0.0.1:8000/api/agent/student/' + $json.body.roll_no + '/' }}",
+        "options": {}
+      },
+      "id": "a0b1c2d3-e4f5-6789-abcd-e01234567890",
+      "name": "Fetch Student Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "your-gmail@gmail.com",
+        "toEmail": "={{ $('Webhook').item.json.body.hod_email }}",
+        "subject": "={{ '[URGENT][KFUEIT] Complaint Escalated #' + $('Webhook').item.json.body.complaint_id + ' — ' + $('Webhook').item.json.body.subject }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; border: 1px solid #fca5a5; border-radius: 8px; overflow: hidden;\">\n\n  <div style=\"background: #7f1d1d; color: white; padding: 24px; text-align: center;\">\n    <h2 style=\"margin: 0; font-size: 20px;\">KFUEIT Agent Assist</h2>\n    <p style=\"margin: 6px 0 0; font-size: 14px; opacity: 0.85;\">URGENT — Student Complaint Escalated to HOD</p>\n  </div>\n\n  <div style=\"padding: 24px; background: #fff7f7;\">\n\n    <div style=\"background: #fee2e2; border: 1px solid #fca5a5; border-radius: 6px; padding: 14px; margin-bottom: 20px; font-size: 14px; color: #7f1d1d;\">\n      <strong>Escalation Reason:</strong><br/>\n      {{ $('Webhook').item.json.body.reason_for_escalation }}\n    </div>\n\n    <h3 style=\"margin: 0 0 12px; font-size: 15px; color: #7f1d1d;\">Complaint Details</h3>\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;\">\n      <tbody>\n        <tr><td style=\"padding: 10px 14px; border: 1px solid #fca5a5; width:35%;\"><strong>Complaint ID</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">#{{ $('Webhook').item.json.body.complaint_id }}</td></tr>\n        <tr style=\"background:#fff1f1;\"><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Subject</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $('Webhook').item.json.body.subject }}</td></tr>\n        <tr><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Description</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $('Webhook').item.json.body.description }}</td></tr>\n        <tr style=\"background:#fff1f1;\"><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Filed At</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $('Webhook').item.json.body.timestamp }}</td></tr>\n        <tr><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Status</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><span style=\"color: #b45309; font-weight: bold;\">IN PROGRESS — Escalated</span></td></tr>\n      </tbody>\n    </table>\n\n    <h3 style=\"margin: 0 0 12px; font-size: 15px; color: #7f1d1d;\">Student Profile</h3>\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px;\">\n      <tbody>\n        <tr><td style=\"padding: 10px 14px; border: 1px solid #fca5a5; width:35%;\"><strong>Name</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $json.profile.name }}</td></tr>\n        <tr style=\"background:#fff1f1;\"><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Roll No</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $json.profile.roll_no }}</td></tr>\n        <tr><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Program</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $json.profile.program }}</td></tr>\n        <tr style=\"background:#fff1f1;\"><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>CGPA</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $json.profile.cgpa }}</td></tr>\n        <tr><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Email</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $json.profile.email }}</td></tr>\n        <tr style=\"background:#fff1f1;\"><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\"><strong>Phone</strong></td><td style=\"padding: 10px 14px; border: 1px solid #fca5a5;\">{{ $json.profile.phone }}</td></tr>\n      </tbody>\n    </table>\n\n    <h3 style=\"margin: 0 0 12px; font-size: 15px; color: #7f1d1d;\">Current Attendance</h3>\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 20px;\">\n      <thead>\n        <tr style=\"background: #fecaca;\">\n          <th style=\"padding: 8px 12px; text-align: left; border: 1px solid #fca5a5;\">Course</th>\n          <th style=\"padding: 8px 12px; text-align: center; border: 1px solid #fca5a5;\">Present</th>\n          <th style=\"padding: 8px 12px; text-align: center; border: 1px solid #fca5a5;\">Total</th>\n          <th style=\"padding: 8px 12px; text-align: center; border: 1px solid #fca5a5;\">%</th>\n          <th style=\"padding: 8px 12px; text-align: center; border: 1px solid #fca5a5;\">Status</th>\n        </tr>\n      </thead>\n      <tbody>\n        {{ $json.attendance.map((a, i) => `<tr style=\"${i%2===1?'background:#fff1f1;':''}\"><td style=\"padding:8px 12px;border:1px solid #fca5a5;\">${a.course_name}</td><td style=\"padding:8px 12px;border:1px solid #fca5a5;text-align:center;\">${a.present}</td><td style=\"padding:8px 12px;border:1px solid #fca5a5;text-align:center;\">${a.total}</td><td style=\"padding:8px 12px;border:1px solid #fca5a5;text-align:center;\">${a.percentage}%</td><td style=\"padding:8px 12px;border:1px solid #fca5a5;text-align:center;\"><span style=\"color:${a.status==='OK'?'green':'red'};font-weight:bold;\">${a.status}</span></td></tr>`).join('') }}\n      </tbody>\n    </table>\n\n    <p style=\"font-size: 13px; color: #555;\">\n      This complaint was escalated because prior resolution attempts were unsuccessful.\n      Your immediate intervention is requested. Please contact the student and concerned faculty.\n    </p>\n  </div>\n\n  <div style=\"background: #fecaca; padding: 12px; text-align: center; font-size: 12px; color: #7f1d1d;\">\n    KFUEIT Agent Assist &middot; Automated Escalation &middot; Complaint #{{ $('Webhook').item.json.body.complaint_id }}\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "a2b3c4d5-e6f7-8901-abcd-ef2345678901",
+      "name": "Email HOD",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [680, 300],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_WITH_YOUR_SMTP_CREDENTIAL_ID",
+          "name": "KFUEIT Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Complaint escalated to HOD', complaint_id: $('Webhook').item.json.body.complaint_id, hod_email: $('Webhook').item.json.body.hod_email }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "c4d5e6f7-a8b9-0123-cdef-456789012345",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Fetch Student Data", "type": "main", "index": 0 }]]
+    },
+    "Fetch Student Data": {
+      "main": [[{ "node": "Email HOD", "type": "main", "index": 0 }]]
+    },
+    "Email HOD": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "f6a7b8c9-d0e1-2345-fabc-567890123456",
+  "id": "kfueit-03-hod-escalation",
+  "tags": [{ "name": "KFUEIT" }]
+}
