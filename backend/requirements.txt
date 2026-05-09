@@ -1,0 +1,36 @@
+# Core
+django==4.2.16
+djangorestframework==3.15.2
+django-cors-headers==4.4.0
+python-dotenv==1.0.1
+psycopg2-binary==2.9.9
+
+# LangGraph + LangChain
+
+langgraph-supervisor==0.0.10
+langchain==0.3.7
+langchain-openai==0.2.8
+langchain-pinecone==0.2.0
+langchain-community==0.3.7
+langgraph-checkpoint-postgres==2.0.6
+langgraph>=0.3.5,<0.4.0
+# OpenAI
+openai==1.54.3
+
+# Pinecone
+pinecone>=7.3.0,<8
+
+# Celery + Redis
+celery==5.4.0
+redis==5.2.0
+django-celery-beat==2.7.0
+
+# Playwright (website scraper)
+playwright==1.48.0
+
+# HTTP requests (for n8n webhooks)
+requests==2.32.3
+httpx<0.28.0
+
+# MySQL (for LMS — production only)
+mysqlclient==2.2.4
