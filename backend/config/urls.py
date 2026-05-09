@@ -11,7 +11,9 @@ def home(request):
             "routes": [
                 "/admin/",
                 "/api/agent/query/",
+                "/api/agent/student/<roll_no>/",
                 "/api/agent/admin/logs/",
+                "/api/agent/vapi/",
             ],
         }
     )

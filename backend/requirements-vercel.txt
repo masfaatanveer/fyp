@@ -1,0 +1,32 @@
+# Vercel-safe requirements — strips packages that don't work on serverless:
+# - playwright   (needs browser binaries, not available on Vercel)
+# - mysqlclient  (needs native compilation, not available on Vercel)
+# - celery       (needs persistent worker process)
+# - redis        (needs persistent connection)
+# - django-celery-beat (depends on celery)
+# - langgraph-checkpoint-postgres (not needed for MVP demo)
+
+# Core Django
+django==4.2.16
+djangorestframework==3.15.2
+django-cors-headers==4.4.0
+python-dotenv==1.0.1
+psycopg2-binary==2.9.9
+whitenoise==6.7.0
+
+# LangGraph + LangChain
+langgraph-supervisor==0.0.10
+langchain==0.3.7
+langchain-openai==0.2.8
+langchain-community==0.3.7
+langgraph>=0.3.5,<0.4.0
+
+# OpenAI
+openai==1.54.3
+
+# Pinecone
+pinecone>=7.3.0,<8
+
+# HTTP
+requests==2.32.3
+httpx<0.28.0

@@ -27,6 +27,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -121,11 +122,12 @@ def _validate_secret_settings():
 
 _validate_secret_settings()
 
-# ── Celery + Redis ────────────────────────────────────────────────────────────
+# ── Celery + Redis (disabled on Vercel serverless) ───────────────────────────
 
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_TASK_ALWAYS_EAGER = os.getenv("VERCEL", "") != ""  # run tasks synchronously on Vercel
 
 # ── n8n Webhook URLs ──────────────────────────────────────────────────────────
 
@@ -140,6 +142,9 @@ CORS_ALLOW_ALL_ORIGINS = True
 # ── Static ────────────────────────────────────────────────────────────────────
 
 STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LANGUAGE_CODE = "en-us"

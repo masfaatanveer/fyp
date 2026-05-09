@@ -145,10 +145,21 @@ export function ChatWidget({
     }, 120);
   }, [open, student]);
 
-  // Initialize Vapi instance once public key is available
+  // Initialize Vapi instance and wire up events
   useEffect(() => {
     if (!vapiPublicKey || vapiRef.current) return;
-    vapiRef.current = new Vapi(vapiPublicKey);
+    const v = new Vapi(vapiPublicKey);
+    v.on("call-start", () => setCallActive(true));
+    v.on("call-end",   () => setCallActive(false));
+    v.on("error", (e: unknown) => {
+      setCallActive(false);
+      const msg = e instanceof Error ? e.message : JSON.stringify(e);
+      setMessages((prev) => [
+        ...prev,
+        { id: makeId(), role: "assistant", content: `Voice call error: ${msg}`, ts: new Date() },
+      ]);
+    });
+    vapiRef.current = v;
   }, [vapiPublicKey]);
 
   const sendMessage = useCallback(
@@ -208,7 +219,7 @@ export function ChatWidget({
       if (!res.ok) {
         setLoginError(data.error || "Student not found.");
       } else {
-        setStudent(data as StudentInfo);
+        setStudent((data.profile ?? data) as StudentInfo);
       }
     } catch {
       setLoginError("Backend se connection nahi ho saka.");
@@ -224,7 +235,7 @@ export function ChatWidget({
         {
           id: makeId(),
           role: "assistant",
-          content: "Voice call ke liye Vapi configure nahi hai. `.env` mein `VITE_VAPI_PUBLIC_KEY` aur `VITE_VAPI_ASSISTANT_ID` set karein.",
+          content: "Voice call ke liye Vapi configure nahi hai. `frontend/.env` mein `VITE_VAPI_PUBLIC_KEY` aur `VITE_VAPI_ASSISTANT_ID` set karein.",
           ts: new Date(),
         },
       ]);
@@ -232,10 +243,23 @@ export function ChatWidget({
     }
     if (callActive) {
       vapiRef.current.stop();
-      setCallActive(false);
     } else {
-      vapiRef.current.start(vapiAssistantId, { metadata: { roll_no: rollNo } } as any);
-      setCallActive(true);
+      try {
+        await vapiRef.current.start(vapiAssistantId, {
+          variableValues: { roll_no: rollNo },
+        } as any);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: makeId(),
+            role: "assistant",
+            content: `Call connect nahi ho saka: ${msg}`,
+            ts: new Date(),
+          },
+        ]);
+      }
     }
   }
 
